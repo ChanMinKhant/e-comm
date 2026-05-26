@@ -19,6 +19,7 @@ const cookieParser = require('cookie-parser');
 
 app.use(express.json({ extended: true }));
 app.use(express.urlencoded({ extended: true }));
+app.set('query parser', 'extended');
 app.use(cookieParser());
 
 app.use(
@@ -41,7 +42,7 @@ app.use(notFound);
 // global error handler
 app.use(errorHandler);
 
-app.listen(8080 || 3000, () => {
+app.listen(process.env.PORT || 3000, () => {
   connectDB();
   console.log('running on port ' + process.env.PORT);
 });
