@@ -1,0 +1,10 @@
+auth 
+register or login
+
+register -> send otp or verifcation link 
+otp verification -> create account
+
+login -> email and password
+
+forget password -> verification link  -> new password
+// localhost:3000/api/reset-password/:token
