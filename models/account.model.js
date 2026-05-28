@@ -14,6 +14,7 @@ const Account = new mongoose.Schema(
       require: [true, 'Password is required'],
       minlength: 6,
       maxlength: 100,
+      select: false,
     },
     role: {
       type: String,

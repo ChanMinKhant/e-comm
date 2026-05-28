@@ -1,5 +1,6 @@
 const dotenv = require('dotenv').config();
 const express = require('express');
+const redisClient = require('./config/redisClient');
 
 // sync global error handler
 process.on('uncaughtException', (err) => {
@@ -19,7 +20,7 @@ const cookieParser = require('cookie-parser');
 
 app.use(express.json({ extended: true }));
 app.use(express.urlencoded({ extended: true }));
-app.set('query parser', 'extended');
+// app.set('query parser', 'extended');
 app.use(cookieParser());
 
 app.use(
@@ -44,6 +45,7 @@ app.use(errorHandler);
 
 app.listen(process.env.PORT || 3000, () => {
   connectDB();
+  redisClient.connect();
   console.log('running on port ' + process.env.PORT);
 });
 

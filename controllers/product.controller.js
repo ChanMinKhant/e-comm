@@ -2,6 +2,8 @@ const asyncHandler = require('express-async-handler');
 const Product = require('../models/product.model');
 const AppError = require('../utils/AppError');
 const ApiFeatures = require('../utils/ApiFeatures');
+const redisClient = require('../config/redisClient');
+const redisKey = require('../utils/redisKey');
 
 // 1. create product
 exports.createProduct = asyncHandler(async (req, res, next) => {
@@ -73,14 +75,28 @@ exports.createProduct = asyncHandler(async (req, res, next) => {
 //   });
 // });
 
+//  cacheing
+// 1.in-memory cache (node-cache)
+// 2. redis cache (redis server)
 exports.getAllProducts = asyncHandler(async (req, res, next) => {
-  const features = new ApiFeatures(Product.find(), req.query)
-    .filter()
-    .sort()
-    .limitFields()
-    .paginate();
+  // console.log(req.query); // Log the query parameters
+  // const features = new ApiFeatures(Product.find(), req.query)
+  //   .filter()
+  //   .sort()
+  //   .limitFields()
+  //   .paginate();
 
-  const products = await features.query;
+  let products = {};
+
+  products = JSON.parse(await redisClient.get(redisKey.products));
+  if (!products) {
+    products = await Product.find();
+    if (req.query.page < 3) {
+      await redisClient.set(redisKey.products, JSON.stringify(products), {
+        EX: 60, // expire in 60 seconds
+      });
+    }
+  }
 
   res.status(200).json({
     ok: true,
@@ -88,6 +104,9 @@ exports.getAllProducts = asyncHandler(async (req, res, next) => {
     data: products,
   });
 });
+
+// invalidate cache when product is created, updated, deleted
+// redisClient.del(redisKey.products);
 
 // exports.getAllProducts = asyncHandler(async (req, res, next) => {
 //   const features = new ApiFeatures(Product.find(), req.query)
@@ -106,5 +125,26 @@ exports.getAllProducts = asyncHandler(async (req, res, next) => {
 // });
 
 // 3. get product by id
+exports.getProductById = asyncHandler(async (req, res, next) => {
+  const { id } = req.params;
+  let product = {};
+  product = JSON.parse(await redisClient.get(redisKey.product(id)));
+  if (!product) {
+    product = await Product.findById(id);
+    await redisClient.set(redisKey.product(id), JSON.stringify(product), {
+      EX: 60, // expire in 60 seconds
+    });
+  }
+
+  if (!product) {
+    return next(new AppError('Product not found', 404));
+  }
+
+  res.status(200).json({
+    ok: true,
+    message: 'Product retrieved successfully',
+    data: product,
+  });
+});
 // 4. update product by id
 // 5. delete product by id`
