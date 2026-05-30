@@ -2,16 +2,17 @@ const asyncHandler = require('express-async-handler');
 const User = require('../models/user.model');
 const redisClient = require('../config/redisClient');
 const redisKey = require('../utils/redisKey');
+const AppError = require('../utils/appError');
 const mongoose = require('mongoose');
 
 // getAllUsers
 exports.getAllUsers = asyncHandler(async (req, res) => {
-  let users = {};
+  let users = [];
   users = JSON.parse(await redisClient.get(redisKey.users));
 
-  if (users) {
+  if (!users) {
     users = await User.find();
-    await redisClient.setEx(redisKey.users, 10, JSON.stringify(users));
+    await redisClient.set(redisKey.users, JSON.stringify(users), { EX: 5 });
   }
 
   res.status(200).json({
@@ -21,9 +22,17 @@ exports.getAllUsers = asyncHandler(async (req, res) => {
   });
 });
 
+// testing
+
 // create user
 exports.createUser = asyncHandler(async (req, res) => {
   const { name, phone, address } = req.body;
+
+  // Check if a user with the same account already exists
+  const existingUser = await User.findOne({ account: req.user.id });
+  if (existingUser) {
+    throw new AppError('User already exists', 400);
+  }
 
   const user = await User.create({
     account: req.user.id,
