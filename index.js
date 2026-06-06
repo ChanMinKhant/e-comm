@@ -53,7 +53,7 @@ if (!process.env.VERCEL) {
     console.log('Running locally on port ' + PORT);
   });
 }
-
+module.exports = app;
 // async global error handler
 process.on('unhandledRejection', (err) => {
   console.log('Unhandled Rejection Error: ' + err.stack);
