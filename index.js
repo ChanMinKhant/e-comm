@@ -18,6 +18,9 @@ const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 // add cors
 
+connectDB();
+redisClient.connect();
+
 app.set('trust proxy', 1);
 app.use(express.json({ extended: true }));
 app.use(express.urlencoded({ extended: true }));
@@ -45,8 +48,6 @@ app.use(notFound);
 app.use(errorHandler);
 
 app.listen(process.env.PORT || 3000, () => {
-  connectDB();
-  redisClient.connect();
   console.log('running on port ' + process.env.PORT);
 });
 
