@@ -47,9 +47,12 @@ app.use(notFound);
 // global error handler
 app.use(errorHandler);
 
-app.listen(process.env.PORT || 3000, () => {
-  console.log('running on port ' + process.env.PORT);
-});
+if (!process.env.VERCEL) {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log('Running locally on port ' + PORT);
+  });
+}
 
 // async global error handler
 process.on('unhandledRejection', (err) => {
